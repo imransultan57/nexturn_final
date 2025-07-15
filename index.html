@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Go URL Shortener</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+    .container { max-width: 400px; margin: 40px auto; background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
+    h1 { text-align: center; color: #333; }
+    label { display: block; margin-top: 1em; }
+    input[type="text"] { width: 100%; padding: 0.5em; margin-top: 0.5em; border: 1px solid #ccc; border-radius: 4px; }
+    button { margin-top: 1em; width: 100%; padding: 0.7em; background: #007bff; color: #fff; border: none; border-radius: 4px; font-size: 1em; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .result, .stats { margin-top: 1.5em; padding: 1em; background: #e9f7ef; border-radius: 4px; }
+    .error { color: #c00; margin-top: 1em; }
+    .short-link { font-weight: bold; color: #007bff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>URL Shortener</h1>
+    <form id="shorten-form">
+      <label for="long-url">Enter a long URL:</label>
+      <input type="text" id="long-url" required placeholder="https://example.com/very/long/url">
+      <button type="submit">Shorten URL</button>
+    </form>
+    <div class="result" id="result" style="display:none;"></div>
+    <div class="error" id="error"></div>
+
+    <hr style="margin:2em 0;">
+
+    <form id="stats-form">
+      <label for="code">Check stats for code:</label>
+      <input type="text" id="code" required placeholder="e.g. AbCd12">
+      <button type="submit">Get Stats</button>
+    </form>
+    <div class="stats" id="stats" style="display:none;"></div>
+  </div>
+
+  <script>
+    const apiBase = "http://localhost:8090";
+
+    document.getElementById('shorten-form').onsubmit = async function(e) {
+      e.preventDefault();
+      document.getElementById('result').style.display = 'none';
+      document.getElementById('error').textContent = '';
+      const url = document.getElementById('long-url').value;
+      try {
+        const res = await fetch(apiBase + "/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+        if (!res.ok) throw new Error("Failed to shorten URL");
+        const data = await res.json();
+        document.getElementById('result').innerHTML =
+          `Short URL: <a class="short-link" href="${apiBase}/${data.code}" target="_blank">${apiBase}/${data.code}</a>`;
+        document.getElementById('result').style.display = 'block';
+      } catch (err) {
+        document.getElementById('error').textContent = err.message;
+      }
+    };
+
+    document.getElementById('stats-form').onsubmit = async function(e) {
+      e.preventDefault();
+      document.getElementById('stats').style.display = 'none';
+      document.getElementById('error').textContent = '';
+      const code = document.getElementById('code').value;
+      try {
+        const res = await fetch(apiBase + "/stats/" + code);
+        if (!res.ok) throw new Error("Code not found");
+        const data = await res.json();
+        document.getElementById('stats').innerHTML =
+          `<b>Hits:</b> ${data.hits}<br>
+           <b>Created At:</b> ${new Date(data.createdAt).toLocaleString()}<br>
+           <b>Expires At:</b> ${new Date(data.expiresAt).toLocaleString()}`;
+        document.getElementById('stats').style.display = 'block';
+      } catch (err) {
+        document.getElementById('error').textContent = err.message;
+      }
+    };
+  </script>
+</body>
+</html> 
