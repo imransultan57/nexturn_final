@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"nexturn_final/internal/api"
@@ -40,8 +41,13 @@ func main() {
 	// Start cleanup job
 	go job.StartCleanupJob(dbConn, logg)
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8090" // fallback for local dev
+	}
+
 	srv := &http.Server{
-		Addr:         ":8090",
+		Addr:         ":" + port,
 		Handler:      c.Handler(r),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,

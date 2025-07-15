@@ -4,7 +4,6 @@ services:
     env: go
     buildCommand: go build -o app .
     startCommand: ./app
-    buildFilterPath: cmd/server
     autoDeploy: true
     plan: free
     envVars:
